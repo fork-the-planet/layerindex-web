@@ -1,0 +1,20 @@
+{% load paginator %}
+<nav aria-label="Pagination Navigation" class="text-center">
+    <ul class="pagination">
+        {% for i in page_obj|elided_page_range %}
+        {% if page_obj.number == i %}
+            <li class="page-item active">
+            <span aria-current="page">{{ i }}</span>
+            </li>
+        {% else %}
+            {% if i == page_obj.paginator.ELLIPSIS %}
+            <li class="pagination-ellipsis" aria-hidden="true"><span>{{ i }}</span></li>
+            {% else %}
+            <li class="page-item">
+                <a href="{% page_url request i %}" aria-label="Go to page {{ i }}">{{ i }}</a>
+            </li>
+            {% endif %}
+        {% endif %}
+        {% endfor %}
+    </ul>
+</nav>
