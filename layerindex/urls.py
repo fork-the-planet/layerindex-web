@@ -197,7 +197,7 @@ urlpatterns = [
         name='branch_comparison_plain'),
     re_path(r'^branch_comparison_rst/$',
         BranchCompareView.as_view(
-            content_type='text/plain; charset=utf-8',
+            content_type='text/x-rst; charset=utf-8',
             template_name='layerindex/branchcompare_rst.txt'),
         name='branch_comparison_rst'),
     re_path(r'^branch_comparison_csv/$',
