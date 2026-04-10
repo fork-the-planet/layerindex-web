@@ -206,10 +206,10 @@
         }
         else if( repoval.startsWith('git://git.yoctoproject.org/') ) {
             reponame = repoval.replace(/^.*\//, '')
-            this.vcs_web_url = 'http://git.yoctoproject.org/cgit/cgit.cgi/' + reponame
-            this.vcs_web_tree_base_url = 'http://git.yoctoproject.org/cgit/cgit.cgi/' + reponame + '/tree/%path%?h=%branch%'
-            this.vcs_web_file_base_url = 'http://git.yoctoproject.org/cgit/cgit.cgi/' + reponame + '/tree/%path%?h=%branch%'
-            this.vcs_web_commit_url = 'http://git.yoctoproject.org/cgit/cgit.cgi/' + reponame + '/commit/?id=%hash%'
+            this.vcs_web_url = 'https://git.yoctoproject.org/' + reponame
+            this.vcs_web_tree_base_url = 'https://git.yoctoproject.org/' + reponame + '/tree/%path%?h=%branch%'
+            this.vcs_web_file_base_url = 'https://git.yoctoproject.org/' + reponame + '/tree/%path%?h=%branch%'
+            this.vcs_web_commit_url = 'https://git.yoctoproject.org/' + reponame + '/commit/?id=%hash%'
             this.vcs_web_type = 'cgit'
         }
         else if( repoval.startsWith('git://github.com/') ) {

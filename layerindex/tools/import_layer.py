@@ -40,10 +40,10 @@ def set_vcs_fields(layer, repoval):
         layer.vcs_web_commit_url = 'http://cgit.openembedded.org/' + reponame + '/commit/?id=%hash%'
     elif repoval.startswith('git://git.yoctoproject.org/'):
         reponame = re.sub('^.*/', '', repoval)
-        layer.vcs_web_url = 'http://git.yoctoproject.org/cgit/cgit.cgi/' + reponame
-        layer.vcs_web_tree_base_url = 'http://git.yoctoproject.org/cgit/cgit.cgi/' + reponame + '/tree/%path%?h=%branch%'
-        layer.vcs_web_file_base_url = 'http://git.yoctoproject.org/cgit/cgit.cgi/' + reponame + '/tree/%path%?h=%branch%'
-        layer.vcs_web_commit_url = 'http://git.yoctoproject.org/cgit/cgit.cgi/' + reponame + '/commit/?id=%hash%'
+        layer.vcs_web_url = 'https://git.yoctoproject.org/' + reponame
+        layer.vcs_web_tree_base_url = 'https://git.yoctoproject.org/' + reponame + '/tree/%path%?h=%branch%'
+        layer.vcs_web_file_base_url = 'https://git.yoctoproject.org/' + reponame + '/tree/%path%?h=%branch%'
+        layer.vcs_web_commit_url = 'https://git.yoctoproject.org/' + reponame + '/commit/?id=%hash%'
     elif repoval.startswith('git://github.com/') or repoval.startswith('http://github.com/') or repoval.startswith('https://github.com/'):
         reponame = re.sub('^.*github.com/', '', repoval)
         reponame = re.sub('.git$', '', reponame)
