@@ -116,10 +116,10 @@ def main():
         layer.layer_type = 'M'
         layer.summary = 'OE-Classic'
         layer.description = 'OpenEmbedded-Classic'
-        layer.vcs_url =  'git://git.openembedded.org/openembedded'
-        layer.vcs_web_url = 'http://cgit.openembedded.org/openembedded'
-        layer.vcs_web_tree_base_url = 'http://cgit.openembedded.org/openembedded/tree/%path%'
-        layer.vcs_web_file_base_url = 'http://cgit.openembedded.org/openembedded/tree/%path%'
+        layer.vcs_url =  'https://git.openembedded.org/openembedded'
+        layer.vcs_web_url = 'https://git.openembedded.org/openembedded'
+        layer.vcs_web_tree_base_url = 'https://git.openembedded.org/openembedded/tree/%path%'
+        layer.vcs_web_file_base_url = 'https://git.openembedded.org/openembedded/tree/%path%'
         layer.comparison = True
         layer.save()
 

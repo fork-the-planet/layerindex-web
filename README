@@ -124,7 +124,7 @@ setup within it:
         Layer type:               Base
         Summary:                  Core metadata
         Description:              Core metadata
-        Repository URL:           git://git.openembedded.org/openembedded-core
+        Repository URL:           https://git.openembedded.org/openembedded-core
         Repository subdirectory:  meta
 
         Once you have filled in the required values, click on the
@@ -217,11 +217,11 @@ been migrated/superseded). If you want to enable this, do the following:
 2. Clone OE-Classic somewhere locally on the machine running the
    layer index:
 
-   git clone git://git.openembedded.org/openembedded
+   git clone https://git.openembedded.org/openembedded
 
 3. Clone a bitbake somewhere locally and check out the 1.12 branch:
 
-   git clone git://git.openembedded.org/bitbake -b 1.12
+   git clone https://git.openembedded.org/bitbake -b 1.12
 
 4. Run import_classic.py, specifying the path to OE-Classic and
    the bitbake you checked out:

@@ -196,7 +196,7 @@
         if( repoval[repoval.length-1] == '/' )
             repoval = repoval.slice(0, repoval.length-1)
 
-        if( repoval.startsWith('git://git.openembedded.org/') ) {
+        if( repoval.startsWith('git://git.openembedded.org/') || repoval.startsWith('https://git.openembedded.org/') ) {
             reponame = repoval.replace(/^.*\//, '')
             this.vcs_web_url = 'https://git.openembedded.org/' + reponame
             this.vcs_web_tree_base_url = 'https://git.openembedded.org/' + reponame + '/tree/%path%?h=%branch%'
@@ -204,7 +204,7 @@
             this.vcs_web_commit_url = 'https://git.openembedded.org/' + reponame + '/commit/?id=%hash%'
             this.vcs_web_type = 'cgit'
         }
-        else if( repoval.startsWith('git://git.yoctoproject.org/') ) {
+        else if( repoval.startsWith('git://git.yoctoproject.org/') || repoval.startsWith('https://git.yoctoproject.org/') ) {
             reponame = repoval.replace(/^.*\//, '')
             this.vcs_web_url = 'https://git.yoctoproject.org/' + reponame
             this.vcs_web_tree_base_url = 'https://git.yoctoproject.org/' + reponame + '/tree/%path%?h=%branch%'

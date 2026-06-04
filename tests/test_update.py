@@ -63,8 +63,8 @@ def hack_settings(backup_settings):
 
 @pytest.fixture(scope="module")
 def import_layer(hack_settings):
-    run_cmd("layerindex/tools/import_layer.py git://git.openembedded.org/openembedded-core -s meta openembedded-core")
-    run_cmd("layerindex/tools/import_layer.py git://git.yoctoproject.org/meta-layerindex-test -s meta-layerindex-test")
+    run_cmd("layerindex/tools/import_layer.py https://git.openembedded.org/openembedded-core -s meta openembedded-core")
+    run_cmd("layerindex/tools/import_layer.py https://git.yoctoproject.org/meta-layerindex-test -s meta-layerindex-test")
     run_cmd("layerindex/update.py -l meta-layerindex-test")
 
 def test_example_recipe(import_layer):

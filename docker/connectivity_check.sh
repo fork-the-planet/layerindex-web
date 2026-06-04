@@ -25,7 +25,7 @@ if ! wget -q $HTTPS_TEST_URL ; then
     exit 1
 fi
 
-GIT_TEST_REPO="git://git.yoctoproject.org/meta-layerindex-test"
+GIT_TEST_REPO="https://git.yoctoproject.org/meta-layerindex-test"
 if ! git clone -q $GIT_TEST_REPO ; then
     echo "ERROR: failed to clone $GIT_TEST_REPO"
     cleanup_tmp
