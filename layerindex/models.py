@@ -541,6 +541,8 @@ class Source(models.Model):
             return self.url
         elif self.url.startswith('git://github.com'):
             return drop_dotgit('https' + self.url[3:])
+        elif self.url.startswith('git://git.openembedded.org'):
+            return drop_dotgit('https://git.openembedded.org' + self.url[26:])
         elif self.url.startswith('git://git.yoctoproject.org'):
             return drop_dotgit('https://git.yoctoproject.org' + self.url[26:])
         elif self.url.startswith('git://git.kernel.org'):

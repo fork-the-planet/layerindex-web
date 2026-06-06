@@ -98,10 +98,10 @@ def main():
                         layer.vcs_url = repoval
                         if repoval.startswith('git://git.openembedded.org/'):
                             reponame = re.sub('^.*/', '', repoval)
-                            layer.vcs_web_url = 'http://cgit.openembedded.org/' + reponame
-                            layer.vcs_web_tree_base_url = 'http://cgit.openembedded.org/' + reponame + '/tree/%path%?h=%branch%'
-                            layer.vcs_web_file_base_url = 'http://cgit.openembedded.org/' + reponame + '/tree/%path%?h=%branch%'
-                            layer.vcs_web_commit_url = 'http://cgit.openembedded.org/' + reponame + '/commit/?id=%hash%'
+                            layer.vcs_web_url = 'https://git.openembedded.org/' + reponame
+                            layer.vcs_web_tree_base_url = 'https://git.openembedded.org/' + reponame + '/tree/%path%?h=%branch%'
+                            layer.vcs_web_file_base_url = 'https://git.openembedded.org/' + reponame + '/tree/%path%?h=%branch%'
+                            layer.vcs_web_commit_url = 'https://git.openembedded.org/' + reponame + '/commit/?id=%hash%'
                         elif repoval.startswith('git://git.yoctoproject.org/'):
                             reponame = re.sub('^.*/', '', repoval)
                             layer.vcs_web_url = 'https://git.yoctoproject.org/' + reponame
@@ -111,24 +111,24 @@ def main():
                         elif repoval.startswith('git://github.com/') or repoval.startswith('http://github.com/') or repoval.startswith('https://github.com/'):
                             reponame = re.sub('^.*github.com/', '', repoval)
                             reponame = re.sub('.git$', '', reponame)
-                            layer.vcs_web_url = 'http://github.com/' + reponame
-                            layer.vcs_web_tree_base_url = 'http://github.com/' + reponame + '/tree/%branch%/'
-                            layer.vcs_web_file_base_url = 'http://github.com/' + reponame + '/blob/%branch%/'
-                            layer.vcs_web_commit_url = 'http://github.com/' + reponame + '/commit/%hash%'
+                            layer.vcs_web_url = 'https://github.com/' + reponame
+                            layer.vcs_web_tree_base_url = 'https://github.com/' + reponame + '/tree/%branch%/'
+                            layer.vcs_web_file_base_url = 'https://github.com/' + reponame + '/blob/%branch%/'
+                            layer.vcs_web_commit_url = 'https://github.com/' + reponame + '/commit/%hash%'
                         elif repoval.startswith('git://gitlab.com/') or repoval.startswith('http://gitlab.com/') or repoval.startswith('https://gitlab.com/'):
                             reponame = re.sub('^.*gitlab.com/', '', repoval)
                             reponame = re.sub('.git$', '', reponame)
-                            layer.vcs_web_url = 'http://gitlab.com/' + reponame
-                            layer.vcs_web_tree_base_url = 'http://gitlab.com/' + reponame + '/tree/%branch%/'
-                            layer.vcs_web_file_base_url = 'http://gitlab.com/' + reponame + '/blob/%branch%/'
-                            layer.vcs_web_commit_url = 'http://gitlab.com/' + reponame + '/commit/%hash%'
+                            layer.vcs_web_url = 'https://gitlab.com/' + reponame
+                            layer.vcs_web_tree_base_url = 'https://gitlab.com/' + reponame + '/tree/%branch%/'
+                            layer.vcs_web_file_base_url = 'https://gitlab.com/' + reponame + '/blob/%branch%/'
+                            layer.vcs_web_commit_url = 'https://gitlab.com/' + reponame + '/commit/%hash%'
                         elif repoval.startswith('git://bitbucket.org/') or repoval.startswith('http://bitbucket.org/') or repoval.startswith('https://bitbucket.org/'):
                             reponame = re.sub('^.*bitbucket.org/', '', repoval)
                             reponame = re.sub('.git$', '', reponame)
-                            layer.vcs_web_url = 'http://bitbucket.org/' + reponame
-                            layer.vcs_web_tree_base_url = 'http://bitbucket.org/' + reponame + '/src/%branch%/%path%?at=%branch%'
-                            layer.vcs_web_file_base_url = 'http://bitbucket.org/' + reponame + '/src/%branch%/%path%?at=%branch%'
-                            layer.vcs_web_commit_url = 'http://bitbucket.org/' + reponame + '/commits/%hash%'
+                            layer.vcs_web_url = 'https://bitbucket.org/' + reponame
+                            layer.vcs_web_tree_base_url = 'https://bitbucket.org/' + reponame + '/src/%branch%/%path%?at=%branch%'
+                            layer.vcs_web_file_base_url = 'https://bitbucket.org/' + reponame + '/src/%branch%/%path%?at=%branch%'
+                            layer.vcs_web_commit_url = 'https://bitbucket.org/' + reponame + '/commits/%hash%'
                         elif '.git' in repoval:
                             res = link_re.match(fields[5].strip())
                             layer.vcs_web_url = res.groups(1)[0]
