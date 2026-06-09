@@ -40,7 +40,7 @@ distros).
    the database backend):
 
    sudo apt-get update
-   sudo apt-get install python3-venv libmariadb-client-lgpl-dev build-essential python3-dev libjpeg-dev libz-dev libfreetype6-dev libssl-dev mariadb-server rabbitmq-server
+   sudo apt-get install python3-venv libmariadb-dev build-essential python3-dev libjpeg-dev libz-dev libfreetype6-dev libssl-dev mariadb-server rabbitmq-server
 
 2. Work around path issues (you may not need this):
 
