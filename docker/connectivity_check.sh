@@ -18,7 +18,7 @@ if ! wget -q $HTTP_TEST_URL ; then
     exit 1
 fi
 
-HTTPS_TEST_URL="https://google.com"
+HTTPS_TEST_URL="https://yoctoproject.org/connectivity.html"
 if ! wget -q $HTTPS_TEST_URL ; then
     echo "ERROR: failed to fetch $HTTPS_TEST_URL"
     cleanup_tmp
