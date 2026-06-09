@@ -3,6 +3,8 @@
 FROM ubuntu:jammy
 LABEL maintainer="Michael Halstead <mhalstead@linuxfoundation.org>"
 
+ARG APP_DIR=/opt
+ENV APP_DIR=${APP_DIR}
 ENV PYTHONUNBUFFERED=1 \
     LANGUAGE=en_US \
     LANG=en_US.UTF-8 \
@@ -55,22 +57,22 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& apt-get clean
 
-COPY . /opt/layerindex
-RUN rm -rf /opt/layerindex/docker
-COPY docker/settings.py /opt/layerindex/settings.py
-COPY docker/refreshlayers.sh /opt/refreshlayers.sh
-COPY docker/updatelayers.sh /opt/updatelayers.sh
-COPY docker/migrate.sh /opt/migrate.sh
-COPY docker/connectivity_check.sh /opt/connectivity_check.sh
+COPY . ${APP_DIR}/layerindex
+RUN rm -rf ${APP_DIR}/layerindex/docker
+COPY docker/settings.py ${APP_DIR}/layerindex/settings.py
+COPY docker/refreshlayers.sh ${APP_DIR}/refreshlayers.sh
+COPY docker/updatelayers.sh ${APP_DIR}/updatelayers.sh
+COPY docker/migrate.sh ${APP_DIR}/migrate.sh
+COPY docker/connectivity_check.sh ${APP_DIR}/connectivity_check.sh
 
-RUN mkdir /opt/workdir \
+RUN mkdir ${APP_DIR}/workdir \
 	&& adduser --system --uid=500 layers \
-	&& chown -R layers /opt/workdir
+	&& chown -R layers ${APP_DIR}/workdir
 USER layers
 
 # Always copy in .gitconfig and proxy helper script (they need editing to be active)
 COPY docker/.gitconfig /home/layers/.gitconfig
-COPY docker/git-proxy /opt/bin/git-proxy
+COPY docker/git-proxy ${APP_DIR}/bin/git-proxy
 
 # Start Gunicorn
-CMD ["/usr/local/bin/gunicorn", "wsgi:application", "--workers=4", "--bind=:5000", "--timeout=60", "--log-level=debug", "--chdir=/opt/layerindex"]
+CMD ["/bin/sh", "-c", "/usr/local/bin/gunicorn wsgi:application --workers=4 --bind=:5000 --timeout=60 --log-level=debug --chdir=${APP_DIR}/layerindex"]

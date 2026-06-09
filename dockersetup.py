@@ -70,6 +70,7 @@ def get_args():
     parser.add_argument('--no-migrate', action="store_true", default=False, help='Skip running database migrations')
     parser.add_argument('--no-admin-user', action="store_true", default=False, help='Skip adding admin user')
     parser.add_argument('--no-connectivity', action="store_true", default=False, help='Skip checking external network connectivity')
+    parser.add_argument('--app-dir', type=str, help='Base directory inside the container for application files. Default is %(default)s', required=False, default='/opt')
 
     args = parser.parse_args()
 
@@ -253,14 +254,16 @@ def yaml_comment(line):
 
 
 # Add hostname, secret key, db info, and email host in docker-compose.yml
-def edit_dockercompose(hostname, dbpassword, dbapassword, secretkey, rmqpassword, portmapping, letsencrypt, email_host, email_port, email_user, email_password, email_ssl, email_tls):
+def edit_dockercompose(hostname, dbpassword, dbapassword, secretkey, rmqpassword, portmapping, letsencrypt, email_host, email_port, email_user, email_password, email_ssl, email_tls, app_dir='/opt'):
+
+    in_layersapp_build = False
 
     def adjust_cert_mount_line(ln):
         linesplit = ln.split(':')
         if letsencrypt:
             linesplit[1] = '/etc/letsencrypt'
         else:
-            linesplit[1] = '/opt/cert'
+            linesplit[1] = app_dir + '/cert'
         # This allows us to handle if there is a ":ro" or similar on the end
         return ':'.join(linesplit)
 
@@ -305,6 +308,33 @@ def edit_dockercompose(hostname, dbpassword, dbapassword, secretkey, rmqpassword
                 newlines.append(ucline + '\n')
             else:
                 newlines.append(yaml_comment(line) + '\n')
+        elif re.match(r'^\s+build:\s+\.$', line):
+            # Convert inline 'build: .' to block form so we can pass APP_DIR as a build arg
+            indent = line[:len(line) - len(line.lstrip())]
+            newlines.append(indent + 'build:\n')
+            newlines.append(indent + '  context: .\n')
+            newlines.append(indent + '  args:\n')
+            newlines.append(indent + '    - APP_DIR=${APP_DIR}\n')
+            in_layersapp_build = True
+            continue
+        elif '- APP_DIR=' in line:
+            # Keep APP_DIR referencing the .env file (do not embed value here)
+            format = line[:line.find('- APP_DIR=')].replace('#', '')
+            newlines.append(format + '- APP_DIR=${APP_DIR}\n')
+            continue
+        elif re.match(r'^\s+context:\s+\.$', line) and in_layersapp_build:
+            in_layersapp_build = False
+            newlines.append(line + '\n')
+            continue
+        elif ':/opt/workdir' in line:
+            newlines.append(line.replace(':/opt/workdir', ':' + app_dir + '/workdir') + '\n')
+            continue
+        elif ':/opt/layerindex-task-logs' in line:
+            newlines.append(line.replace(':/opt/layerindex-task-logs', ':' + app_dir + '/layerindex-task-logs') + '\n')
+            continue
+        elif '--workdir=/opt/layerindex' in line:
+            newlines.append(line.replace('--workdir=/opt/layerindex', '--workdir=' + app_dir + '/layerindex') + '\n')
+            continue
         elif "layersweb:" in line:
             in_layersweb = True
             newlines.append(line + "\n")
@@ -426,7 +456,7 @@ def edit_nginx_ssl_conf(hostname, https_port, certdir, certfile, keyfile):
     writefile("docker/nginx-ssl-edited.conf", ''.join(newlines))
 
 
-def edit_settings_py(emailaddr):
+def edit_settings_py(emailaddr, app_dir='/opt'):
     filedata = readfile('docker/settings.py')
     newlines = []
     lines = filedata.splitlines()
@@ -443,6 +473,9 @@ def edit_settings_py(emailaddr):
             if emailaddr:
                 newlines.append("  ('Admin', '%s'),\n" % emailaddr)
             newlines.append(")\n")
+            continue
+        elif line.lstrip().startswith('LAYER_FETCH_DIR'):
+            newlines.append("LAYER_FETCH_DIR = \"%s/workdir\"\n" % app_dir)
             continue
         newlines.append(line + "\n")
     writefile("docker/settings.py", ''.join(newlines))
@@ -474,9 +507,9 @@ def edit_dockerfile_web(hostname, no_https):
     writefile("Dockerfile.web", ''.join(newlines))
 
 
-def setup_https(hostname, http_port, https_port, letsencrypt, letsencrypt_production, cert, cert_key, emailaddr):
+def setup_https(hostname, http_port, https_port, letsencrypt, letsencrypt_production, cert, cert_key, emailaddr, app_dir='/opt'):
     local_cert_dir = os.path.abspath('docker/certs')
-    container_cert_dir = '/opt/cert'
+    container_cert_dir = app_dir + '/cert'
     if letsencrypt:
         # Create dummy cert
         container_cert_dir = '/etc/letsencrypt'
@@ -578,8 +611,26 @@ def edit_options_file(project_name):
         f.write('project_name=%s\n' % project_name)
 
 
-def check_connectivity():
-    return_code = subprocess.call(['docker-compose', 'run', '--rm', 'layersapp', '/opt/connectivity_check.sh'], shell=False)
+def write_env_file(app_dir):
+    """Write APP_DIR to .env so docker-compose passes it as a build arg."""
+    env_vars = {}
+    try:
+        with open('.env', 'r') as f:
+            for line in f:
+                line = line.strip()
+                if '=' in line and not line.startswith('#'):
+                    k, v = line.split('=', 1)
+                    env_vars[k.strip()] = v.strip()
+    except FileNotFoundError:
+        pass
+    env_vars['APP_DIR'] = app_dir
+    with open('.env', 'w') as f:
+        for k, v in env_vars.items():
+            f.write('%s=%s\n' % (k, v))
+
+
+def check_connectivity(app_dir='/opt'):
+    return_code = subprocess.call(['docker-compose', 'run', '--rm', 'layersapp', app_dir + '/connectivity_check.sh'], shell=False)
     if return_code != 0:
         print("Connectivity check failed - if you are behind a proxy, please check that you have correctly specified the proxy settings on the command line (see --help for details)")
         sys.exit(1)
@@ -741,24 +792,25 @@ if args.uninstall:
 if args.update:
     args.no_https = read_dockerfile_web()
     if not args.no_https:
-        container_cert_dir = '/opt/cert'
+        container_cert_dir = args.app_dir + '/cert'
         args.hostname, https_port, certdir, certfile, keyfile = read_nginx_ssl_conf(container_cert_dir)
         edit_nginx_ssl_conf(args.hostname, https_port, certdir, certfile, keyfile)
 else:
     # Always edit these in case we switch from proxy to no proxy
     edit_gitproxy(socks_proxy_host, socks_proxy_port, args.no_proxy)
     edit_dockerfile(args.http_proxy, args.https_proxy, args.no_proxy)
+    write_env_file(args.app_dir)
 
-    edit_dockercompose(args.hostname, dbpassword, dbapassword, secretkey, rmqpassword, args.portmapping, args.letsencrypt, email_host, email_port, args.email_user, args.email_password, args.email_ssl, args.email_tls)
+    edit_dockercompose(args.hostname, dbpassword, dbapassword, secretkey, rmqpassword, args.portmapping, args.letsencrypt, email_host, email_port, args.email_user, args.email_password, args.email_ssl, args.email_tls, args.app_dir)
 
     edit_dockerfile_web(args.hostname, args.no_https)
 
-    edit_settings_py(emailaddr)
+    edit_settings_py(emailaddr, args.app_dir)
 
     edit_options_file(args.project_name)
 
     if not args.no_https:
-        setup_https(args.hostname, http_port, https_port, args.letsencrypt, args.letsencrypt_production, args.cert, args.cert_key, emailaddr)
+        setup_https(args.hostname, http_port, https_port, args.letsencrypt, args.letsencrypt_production, args.cert, args.cert_key, emailaddr, args.app_dir)
 
 ## Start up containers
 return_code = subprocess.call(['docker-compose', 'up', '-d', '--build'], shell=False)
@@ -768,7 +820,7 @@ if return_code != 0:
 
 if not (args.update or args.no_connectivity):
     ## Run connectivity check
-    check_connectivity()
+    check_connectivity(args.app_dir)
 
 # Get real project name (if only there were a reasonable way to do this... ugh)
 real_project_name = ''
@@ -830,7 +882,7 @@ if not args.no_migrate:
     env = os.environ.copy()
     env['DATABASE_USER'] = 'root'
     env['DATABASE_PASSWORD'] = dbapassword
-    return_code = subprocess.call(['docker-compose', 'run', '--rm', '-e', 'DATABASE_USER', '-e', 'DATABASE_PASSWORD', 'layersapp', '/opt/migrate.sh'], shell=False, env=env)
+    return_code = subprocess.call(['docker-compose', 'run', '--rm', '-e', 'DATABASE_USER', '-e', 'DATABASE_PASSWORD', 'layersapp', args.app_dir + '/migrate.sh'], shell=False, env=env)
     if return_code != 0:
         print("Applying migrations failed")
         sys.exit(1)
@@ -864,13 +916,13 @@ if not args.update:
                 break
     for volume in volumes:
         volname = '%s_%s' % (real_project_name, volume)
-        return_code = subprocess.call(['docker', 'run', '--rm', '-v', '%s:/opt/mount' % volname, 'debian:stretch', 'chown', '500', '/opt/mount'], shell=False)
+        return_code = subprocess.call(['docker', 'run', '--rm', '-v', '%s:%s/mount' % (volname, args.app_dir), 'debian:stretch', 'chown', '500', args.app_dir + '/mount'], shell=False)
         if return_code != 0:
             print("Setting volume permissions for volume %s failed" % volume)
             sys.exit(1)
 
 ## Generate static assets. Run this command again to regenerate at any time (when static assets in the code are updated)
-return_code = subprocess.call("docker-compose run --rm -e STATIC_ROOT=/usr/share/nginx/html -v %s_layersstatic:/usr/share/nginx/html layersapp /opt/layerindex/manage.py collectstatic --noinput" % quote(real_project_name), shell = True)
+return_code = subprocess.call("docker-compose run --rm -e STATIC_ROOT=/usr/share/nginx/html -v %s_layersstatic:/usr/share/nginx/html layersapp %s/layerindex/manage.py collectstatic --noinput" % (quote(real_project_name), args.app_dir), shell = True)
 if return_code != 0:
     print("Collecting static files failed")
     sys.exit(1)
@@ -891,12 +943,12 @@ else:
 if not args.update:
     if not args.databasefile:
         ## Set site name
-        return_code = subprocess.call(['docker-compose', 'run', '--rm', 'layersapp', '/opt/layerindex/layerindex/tools/site_name.py', host, 'OpenEmbedded Layer Index'], shell=False)
+        return_code = subprocess.call(['docker-compose', 'run', '--rm', 'layersapp', args.app_dir + '/layerindex/layerindex/tools/site_name.py', host, 'OpenEmbedded Layer Index'], shell=False)
 
     if not args.no_admin_user:
         ## For a fresh database, create an admin account
         print("Creating database superuser. Input user name and password when prompted.")
-        return_code = subprocess.call(['docker-compose', 'run', '--rm', 'layersapp', '/opt/layerindex/manage.py', 'createsuperuser', '--email', emailaddr], shell=False)
+        return_code = subprocess.call(['docker-compose', 'run', '--rm', 'layersapp', args.app_dir + '/layerindex/manage.py', 'createsuperuser', '--email', emailaddr], shell=False)
         if return_code != 0:
             print("Creating superuser failed")
             sys.exit(1)
